@@ -1,18 +1,15 @@
 def main():
     sentences_words = []
     sentences_tags = []
-    read_pos_from_file("WSJ_02-21.pos", sentences_words, sentences_tags)
+    read_pos_from_file("WSJ_POS_CORPUS_FOR_STUDENTS/WSJ_02-21.pos", sentences_words, sentences_tags)
     existing_tags, existing_words, state_arc_to, state_emit = training(sentences_words, sentences_tags)
-    wsj_24 = []
-    read_words_from_file("WSJ_24.words", wsj_24)
-    counter = 0
-    for sentence in wsj_24:
-        if counter == 1:
-            break
-        counter += 1
-        print(sentence)
-        wsj_24_pos = decode(sentence, existing_tags, existing_words, state_arc_to, state_emit)
-        print(wsj_24_pos)
+    wsj_24_words = []
+    wsj_24_pos = []
+    read_words_from_file("WSJ_POS_CORPUS_FOR_STUDENTS/WSJ_24.words", wsj_24_words)
+    for sentence in wsj_24_words:
+        wsj_24_pos_one_sentence = decode(sentence, existing_tags, existing_words, state_arc_to, state_emit)
+        wsj_24_pos.append(wsj_24_pos_one_sentence)
+    write_pos_to_file("WSJ_24.pos", wsj_24_words, wsj_24_pos)
 
 
 def read_pos_from_file(filename, sentences_words, sentences_tags):
@@ -21,10 +18,10 @@ def read_pos_from_file(filename, sentences_words, sentences_tags):
     tags = []
     for line in file:
         if line == "\n":
-            sentences_words.append(words.copy())
-            sentences_tags.append(tags.copy())
-            words.clear()
-            tags.clear()
+            sentences_words.append(words)
+            sentences_tags.append(tags)
+            words = []
+            tags = []
             continue
         line = line.strip("\n")
         words.append(line.split("\t")[0])
@@ -42,6 +39,21 @@ def read_words_from_file(filename, data_words):
             continue
         line = line.strip("\n")
         words.append(line)
+    file.close()
+
+
+def write_pos_to_file(filename, data_words, data_pos):
+    file = open(filename, 'w')
+    assert len(data_words) == len(data_pos)
+    number_of_sentences = len(data_words)
+    for i in range(number_of_sentences):
+        words = data_words[i]
+        tags = data_pos[i]
+        assert len(words) == len(tags)
+        number_of_words = len(words)
+        for j in range(number_of_words):
+            file.write("{}\t{}\n".format(words[j], tags[j]))
+        file.write("\n")
     file.close()
 
 
@@ -105,29 +117,31 @@ def decode(sentence, existing_tags, existing_words, state_arc_to, state_emit):
         if word in existing_words:
             for tag in existing_tags:
                 for tag_prime in existing_tags:
-                    probability = viterbi.get((tag_prime, i - 1), 0) * state_arc_to.get((tag_prime, tag), 0) * state_emit.get((tag, word), 0)
-                    if viterbi.get((tag, i), 0) < probability:
+                    probability = viterbi.get((tag_prime, i - 1), 0) * state_arc_to.get((tag_prime, tag),
+                                                                                        0) * state_emit.get((tag, word),
+                                                                                                            0)
+                    if viterbi.get((tag, i), 0) <= probability:
                         viterbi[(tag, i)] = probability
                         back_pointer[(tag, i)] = tag_prime
         else:
             for tag in selected_tags:
                 for tag_prime in existing_tags:
                     probability = viterbi.get((tag_prime, i - 1), 0) * state_arc_to.get((tag_prime, tag), 0)
-                    if viterbi.get((tag, i), 0) < probability:
+                    if viterbi.get((tag, i), 0) <= probability:
                         viterbi[(tag, i)] = probability
                         back_pointer[(tag, i)] = tag_prime
     # termination step
     for tag_prime in existing_tags:
-        probability = viterbi.get((tag_prime, T), 0) * state_arc_to.get((tag_prime, tag), 0) * 1
-        if viterbi.get(("End", T + 1), 0) < probability:
+        probability = viterbi.get((tag_prime, T), 0) * state_arc_to.get((tag_prime, "End"), 0) * 1
+        if viterbi.get(("End", T + 1), 0) <= probability:
             viterbi[("End", T + 1)] = probability
             back_pointer[("End", T + 1)] = tag_prime
     back_pointer_tag = back_pointer[("End", T + 1)]
     pos.append(back_pointer_tag)
-    for i in range(T, 0, -1):
+    for i in range(T, 1, -1):
         back_pointer_tag = back_pointer[(back_pointer_tag, i)]
         pos.append(back_pointer_tag)
-    return pos
+    return pos[::-1]
 
 
 if __name__ == "__main__":
