@@ -5,11 +5,11 @@ def main():
     existing_tags, existing_words, state_arc_to, state_emit = training(sentences_words, sentences_tags)
     wsj_24_words = []
     wsj_24_pos = []
-    read_words_from_file("WSJ_POS_CORPUS_FOR_STUDENTS/WSJ_24.words", wsj_24_words)
+    read_words_from_file("WSJ_POS_CORPUS_FOR_STUDENTS/WSJ_23.words", wsj_24_words)
     for sentence in wsj_24_words:
         wsj_24_pos_one_sentence = decode(sentence, existing_tags, existing_words, state_arc_to, state_emit)
         wsj_24_pos.append(wsj_24_pos_one_sentence)
-    write_pos_to_file("WSJ_24.pos", wsj_24_words, wsj_24_pos)
+    write_pos_to_file("WSJ_23.pos", wsj_24_words, wsj_24_pos)
 
 
 def read_pos_from_file(filename, sentences_words, sentences_tags):
@@ -187,13 +187,13 @@ def decode(sentence, existing_tags, existing_words, state_arc_to, state_emit):
                 for tag in existing_tags:
                     for tag_prime in existing_tags:
                         if tag == "VBD":
-                            probability = viterbi.get((tag_prime, i - 1), 0) * state_arc_to.get((tag_prime, tag), 0) * 0.5
+                            probability = viterbi.get((tag_prime, i - 1), 0) * state_arc_to.get((tag_prime, tag), 0) * 0.7
                             if viterbi.get((tag, i), 0) <= probability:
                                 viterbi[(tag, i)] = probability
                                 back_pointer[(tag, i)] = tag_prime
                         elif tag == "JJ":
                             probability = viterbi.get((tag_prime, i - 1), 0) * state_arc_to.get((tag_prime, tag),
-                                                                                                0) * 0.4
+                                                                                                0) * 0.2
                             if viterbi.get((tag, i), 0) <= probability:
                                 viterbi[(tag, i)] = probability
                                 back_pointer[(tag, i)] = tag_prime
