@@ -110,7 +110,7 @@ def decode(sentence, existing_tags, existing_words, state_arc_to, state_emit):
     for tag in existing_tags:
         viterbi[(tag, 0)] = 0
         back_pointer[(tag, 0)] = 0
-    viterbi[("Start", 0)] = 1
+    viterbi[("Start", 0)] = 1.0
     # recursion step
     for i in range(1, T + 1):
         word = sentence[i - 1]
@@ -124,12 +124,97 @@ def decode(sentence, existing_tags, existing_words, state_arc_to, state_emit):
                         viterbi[(tag, i)] = probability
                         back_pointer[(tag, i)] = tag_prime
         else:
-            for tag in selected_tags:
-                for tag_prime in existing_tags:
-                    probability = viterbi.get((tag_prime, i - 1), 0) * state_arc_to.get((tag_prime, tag), 0)
-                    if viterbi.get((tag, i), 0) <= probability:
-                        viterbi[(tag, i)] = probability
-                        back_pointer[(tag, i)] = tag_prime
+            if i > 1 and word[0].isupper() and word.endswith("s"):
+                for tag in existing_tags:
+                    for tag_prime in existing_tags:
+                        if tag == "NNPS":
+                            print(word)
+                            probability = viterbi.get((tag_prime, i - 1), 0) * state_arc_to.get((tag_prime, tag), 0) * 0.9
+                            if viterbi.get((tag, i), 0) <= probability:
+                                viterbi[(tag, i)] = probability
+                                back_pointer[(tag, i)] = tag_prime
+                        else:
+                            probability = viterbi.get((tag_prime, i - 1), 0) * state_arc_to.get((tag_prime, tag), 0) * 0.1
+                            if viterbi.get((tag, i), 0) <= probability:
+                                viterbi[(tag, i)] = probability
+                                back_pointer[(tag, i)] = tag_prime
+            elif i > 1 and word[0].isupper() and not word.endswith("s"):
+                for tag in existing_tags:
+                    for tag_prime in existing_tags:
+                        if tag == "NNP":
+                            probability = viterbi.get((tag_prime, i - 1), 0) * state_arc_to.get((tag_prime, tag), 0) * 0.9
+                            if viterbi.get((tag, i), 0) <= probability:
+                                viterbi[(tag, i)] = probability
+                                back_pointer[(tag, i)] = tag_prime
+                        else:
+                            probability = viterbi.get((tag_prime, i - 1), 0) * state_arc_to.get((tag_prime, tag), 0) * 0.1
+                            if viterbi.get((tag, i), 0) <= probability:
+                                viterbi[(tag, i)] = probability
+                                back_pointer[(tag, i)] = tag_prime
+            elif word.endswith("ly"):
+                for tag in existing_tags:
+                    for tag_prime in existing_tags:
+                        if tag == "RB":
+                            probability = viterbi.get((tag_prime, i - 1), 0) * state_arc_to.get((tag_prime, tag), 0) * 0.9
+                            if viterbi.get((tag, i), 0) <= probability:
+                                viterbi[(tag, i)] = probability
+                                back_pointer[(tag, i)] = tag_prime
+                        else:
+                            probability = viterbi.get((tag_prime, i - 1), 0) * state_arc_to.get((tag_prime, tag), 0) * 0.1
+                            if viterbi.get((tag, i), 0) <= probability:
+                                viterbi[(tag, i)] = probability
+                                back_pointer[(tag, i)] = tag_prime
+            elif word.endswith("ing"):
+                for tag in existing_tags:
+                    for tag_prime in existing_tags:
+                        if tag == "VBG":
+                            probability = viterbi.get((tag_prime, i - 1), 0) * state_arc_to.get((tag_prime, tag), 0) * 0.5
+                            if viterbi.get((tag, i), 0) <= probability:
+                                viterbi[(tag, i)] = probability
+                                back_pointer[(tag, i)] = tag_prime
+                        elif tag == "JJ":
+                            probability = viterbi.get((tag_prime, i - 1), 0) * state_arc_to.get((tag_prime, tag),
+                                                                                                0) * 0.4
+                            if viterbi.get((tag, i), 0) <= probability:
+                                viterbi[(tag, i)] = probability
+                                back_pointer[(tag, i)] = tag_prime
+                        else:
+                            probability = viterbi.get((tag_prime, i - 1), 0) * state_arc_to.get((tag_prime, tag), 0) * 0.1
+                            if viterbi.get((tag, i), 0) <= probability:
+                                viterbi[(tag, i)] = probability
+                                back_pointer[(tag, i)] = tag_prime
+            elif word.endswith("ed"):
+                for tag in existing_tags:
+                    for tag_prime in existing_tags:
+                        if tag == "VBD":
+                            probability = viterbi.get((tag_prime, i - 1), 0) * state_arc_to.get((tag_prime, tag), 0) * 0.5
+                            if viterbi.get((tag, i), 0) <= probability:
+                                viterbi[(tag, i)] = probability
+                                back_pointer[(tag, i)] = tag_prime
+                        elif tag == "JJ":
+                            probability = viterbi.get((tag_prime, i - 1), 0) * state_arc_to.get((tag_prime, tag),
+                                                                                                0) * 0.4
+                            if viterbi.get((tag, i), 0) <= probability:
+                                viterbi[(tag, i)] = probability
+                                back_pointer[(tag, i)] = tag_prime
+                        else:
+                            probability = viterbi.get((tag_prime, i - 1), 0) * state_arc_to.get((tag_prime, tag), 0) * 0.1
+                            if viterbi.get((tag, i), 0) <= probability:
+                                viterbi[(tag, i)] = probability
+                                back_pointer[(tag, i)] = tag_prime
+            else:
+                for tag in existing_tags:
+                    for tag_prime in existing_tags:
+                        if tag in selected_tags:
+                            probability = viterbi.get((tag_prime, i - 1), 0) * state_arc_to.get((tag_prime, tag), 0) * 0.9
+                            if viterbi.get((tag, i), 0) <= probability:
+                                viterbi[(tag, i)] = probability
+                                back_pointer[(tag, i)] = tag_prime
+                        else:
+                            probability = viterbi.get((tag_prime, i - 1), 0) * state_arc_to.get((tag_prime, tag), 0) * 0.1
+                            if viterbi.get((tag, i), 0) <= probability:
+                                viterbi[(tag, i)] = probability
+                                back_pointer[(tag, i)] = tag_prime
     # termination step
     for tag_prime in existing_tags:
         probability = viterbi.get((tag_prime, T), 0) * state_arc_to.get((tag_prime, "End"), 0) * 1
